@@ -53,19 +53,3 @@ docs/
   diagrams-and-concepts.md         circuit diagrams and workflow notes
   study-plan.md                    a 5-day revision plan
 ```
-
-To add or fix a question, edit `web/questions.js`, then run:
-
-```bash
-node scripts/build-markdown.js
-```
-
-## Credits and references
-
-The topic structure follows the [QAMP 2025 Qiskit 2.x certification tutorial notebooks](https://github.com/muf148/qiskit_2x_certification_exam_tutorial), which are worth working through alongside these questions.
-
-- [Official exam page and objectives](https://www.ibm.com/training/certification/ibm-certified-quantum-computation-using-qiskit-v2x-developer-associate-C9008400)
-- [Qiskit documentation](https://quantum.cloud.ibm.com/docs)
-- [OpenQASM 3 specification](https://openqasm.com/)
-
-These are original practice questions, not real exam items. The project isn't affiliated with or endorsed by IBM. IBM and Qiskit are trademarks of their respective owners.
