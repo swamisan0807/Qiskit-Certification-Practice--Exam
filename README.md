@@ -46,6 +46,10 @@ web/
   index.html, styles.css, app.js   the practice app
   anim.js                          animation player, scene types and statevector simulator
   questions.js                     the question bank, including each answer's animation
+  auth.js                          sign in / sign up / forgot password / saved results
+  config.js                        your Supabase project URL and public anon key
+supabase/
+  schema.sql                       the results table and its security rules
 scripts/
   build-markdown.js                regenerates practice-exam.md from the bank
 practice-exam.md                   all 60 questions as a printable document
@@ -53,3 +57,22 @@ docs/
   diagrams-and-concepts.md         circuit diagrams and workflow notes
   study-plan.md                    a 5-day revision plan
 ```
+
+## Accounts and login (Supabase, free)
+
+Sign-up, sign-in and "Forgot password" use [Supabase](https://supabase.com). Supabase stores the user accounts and exam results in its own database. **None of that data is ever stored in this repository.** The only Supabase values in the code are the project URL and the public "anon" key in `web/config.js`. They're designed to be public, and the database rules only let each user read their own results.
+
+One-time setup, about 5 minutes:
+
+1. Create a free project at [supabase.com](https://supabase.com).
+2. **SQL Editor → New query**: paste the contents of `supabase/schema.sql` and click **Run**. This creates the `attempts` table and its security rules.
+3. **Authentication → Sign In / Providers → Email**: make sure it's enabled. "Confirm email" is on by default, so new users get a confirmation email.
+4. **Authentication → URL Configuration**:
+   - **Site URL**: your live site, e.g. `https://qiskit-practice-exam.onrender.com`
+   - **Redirect URLs**: add the same URL and `http://localhost:8000`
+5. **Project Settings → API**: copy the **Project URL** and the **anon public** key into `web/config.js`.
+   Never put the `service_role` key in the code; it's secret and the app doesn't need it.
+
+Supabase's built-in email sender only allows a few emails per hour, which is fine for testing. For real users, add your own SMTP provider (for example Resend or Brevo, both with free tiers) under **Authentication → Emails → SMTP Settings**.
+
+Until `web/config.js` is filled in, login runs in **local mode**: sign-up and sign-in work, but accounts and results are kept only in that browser (passwords salted and hashed, never in the code), and "Forgot password" lets you choose a new password on the spot instead of sending an email. Fill in the two values and the same page switches to real Supabase accounts.

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap">
-  <link rel="stylesheet" href="styles.css?v=9">
+  <link rel="stylesheet" href="styles.css?v=16">
 </head>
 <body>
   <div class="banner">Qiskit 2.x Certification • Quantum Practice Lab</div>
@@ -20,14 +20,104 @@
       </button>
       <div class="topbar-right">
         <span class="timer" id="timer" hidden></span>
+        <span class="user-chip" id="user-chip" hidden>
+          <span class="user-dot" aria-hidden="true"></span>
+          <span id="user-name"></span>
+          <button class="btn ghost small" id="signout-btn" type="button">Sign out</button>
+        </span>
       </div>
     </div>
   </header>
 
   <main class="wrap" id="app">
+    <!-- Login screen -->
+    <section id="view-auth" class="view" hidden>
+      <div class="auth-layout">
+        <div class="auth-intro">
+          <h1>Qiskit v2.x Developer practice exam</h1>
+          <p class="lead">Sign in to take the 60-question timed exam and keep a record of every attempt.</p>
+          <ul class="auth-points">
+            <li>60 questions in 90 minutes, weighted like the real C1000-179 exam</li>
+            <li>Questions and answers shuffled on every attempt</li>
+            <li>Score by section, plus every answer explained with an animation</li>
+            <li>Your past results saved to your account</li>
+          </ul>
+        </div>
+
+        <div class="card auth-card">
+          <h2 id="auth-title">Sign in</h2>
+          <p class="muted" id="auth-sub"></p>
+          <p class="auth-msg" id="auth-msg" role="status" hidden></p>
+
+          <div id="auth-forms">
+            <form id="form-signin" novalidate>
+              <label class="field"><span>Email</span>
+                <input name="email" type="email" autocomplete="email" required></label>
+              <label class="field"><span>Password</span>
+                <input name="password" type="password" autocomplete="current-password" required></label>
+              <button class="btn full" type="submit">Sign in</button>
+              <div class="auth-links">
+                <button class="linkish" id="link-forgot" type="button">Reset password</button>
+                <span>New here? <button class="linkish" id="link-signup" type="button">Create an account</button></span>
+              </div>
+            </form>
+
+            <form id="form-signup" novalidate hidden>
+              <label class="field"><span>Full name</span>
+                <input name="name" type="text" autocomplete="name" required></label>
+              <label class="field"><span>Email</span>
+                <input name="email" type="email" autocomplete="email" required></label>
+              <label class="field"><span>Password</span>
+                <input name="password" type="password" autocomplete="new-password" minlength="8" required data-rules></label>
+              <label class="field"><span>Confirm password</span>
+                <input name="confirm" type="password" autocomplete="new-password" required></label>
+              <button class="btn full" type="submit">Create account</button>
+              <div class="auth-links">
+                <span>Already have an account? <button class="linkish link-signin" type="button">Sign in</button></span>
+              </div>
+            </form>
+
+            <form id="form-forgot" novalidate hidden>
+              <label class="field"><span>Email</span>
+                <input name="email" type="email" autocomplete="email" required></label>
+              <div id="forgot-new-password">
+                <label class="field"><span>New password</span>
+                  <input name="password" type="password" autocomplete="new-password" minlength="8" data-rules></label>
+                <label class="field"><span>Confirm new password</span>
+                  <input name="confirm" type="password" autocomplete="new-password"></label>
+              </div>
+              <button class="btn full" type="submit" id="forgot-submit">Reset password</button>
+              <div class="auth-links">
+                <button class="linkish link-signin" type="button">Back to sign in</button>
+              </div>
+            </form>
+
+            <form id="form-reset" novalidate hidden>
+              <label class="field"><span>New password</span>
+                <input name="password" type="password" autocomplete="new-password" minlength="8" required data-rules></label>
+              <label class="field"><span>Confirm new password</span>
+                <input name="confirm" type="password" autocomplete="new-password" required></label>
+              <button class="btn full" type="submit">Save new password</button>
+            </form>
+          </div>
+
+          <div class="exam-notice">
+            <p class="exam-notice-title">Candidate notice</p>
+            <ul class="exam-facts">
+              <li><b>60</b> questions</li>
+              <li><b>90</b> minutes</li>
+              <li><b>70%</b> target score</li>
+            </ul>
+            <p>The timer starts when you begin the exam and can't be paused. Answers and explanations are shown only after you submit. Your results are private to your account.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Start screen -->
     <section id="view-start" class="view">
       <div class="intro">
+        <p class="eyebrow" id="welcome"></p>
         <h1>Practice for the Qiskit v2.x Developer certification</h1>
         <p class="lead">
           60 questions across the eight exam sections, weighted the same way as the real
@@ -47,6 +137,11 @@
         <span id="resume-text"></span>
         <button class="btn" id="resume-btn" type="button">Resume</button>
         <button class="btn ghost" id="discard-btn" type="button">Discard</button>
+      </div>
+
+      <div class="card history" id="history" hidden>
+        <h3>Your recent attempts</h3>
+        <div id="history-list"></div>
       </div>
 
       <p class="fine">
@@ -87,6 +182,7 @@
           <p class="eyebrow" id="result-mode"></p>
           <h2 id="result-score"></h2>
           <p id="result-note" class="muted"></p>
+          <p class="saved-note" id="saved-note" hidden></p>
         </div>
         <div class="results-actions">
           <button class="btn" id="retry-wrong-btn" type="button">Retake the ones I missed</button>
@@ -108,8 +204,11 @@
   </main>
 
   <!-- Bump ?v= when these files change so browsers don't serve stale copies. -->
-  <script src="questions.js?v=9"></script>
-  <script src="anim.js?v=9"></script>
-  <script src="app.js?v=9"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="config.js?v=16"></script>
+  <script src="questions.js?v=16"></script>
+  <script src="anim.js?v=16"></script>
+  <script src="auth.js?v=16"></script>
+  <script src="app.js?v=16"></script>
 </body>
 </html>
