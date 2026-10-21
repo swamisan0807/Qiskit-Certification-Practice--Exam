@@ -14,14 +14,17 @@
   let timerId = null;
 
   // ---------- storage (best effort: private windows can throw) ----------
+  // The in-progress run is kept per user, so two people sharing a browser
+  // don't resume each other's exam.
+  const storeKey = () => `${STORE_KEY}:${Auth.userId() || "anon"}`;
   function save() {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (_) {}
+    try { localStorage.setItem(storeKey(), JSON.stringify(state)); } catch (_) {}
   }
   function load() {
-    try { return JSON.parse(localStorage.getItem(STORE_KEY)); } catch (_) { return null; }
+    try { return JSON.parse(localStorage.getItem(storeKey())); } catch (_) { return null; }
   }
   function clearSaved() {
-    try { localStorage.removeItem(STORE_KEY); } catch (_) {}
+    try { localStorage.removeItem(storeKey()); } catch (_) {}
   }
 
   // ---------- helpers ----------
@@ -52,7 +55,7 @@
     return LETTERS[state.perm[qi].indexOf(optionIndex)];
   }
   function showView(name) {
-    for (const v of ["start", "quiz", "results"]) $("view-" + v).hidden = v !== name;
+    for (const v of ["auth", "start", "quiz", "results"]) $("view-" + v).hidden = v !== name;
     window.scrollTo(0, 0);
   }
 
@@ -63,6 +66,8 @@
 
     $("start-summary").textContent =
       `${QUESTIONS.length} questions, ${Math.round(QUESTIONS.length * MINUTES_PER_QUESTION)} minutes`;
+    $("welcome").textContent = `Welcome, ${Auth.displayName()}`;
+    renderHistory();
 
     const saved = load();
     const resume = $("resume");
@@ -90,6 +95,7 @@
       flags: [],
       pos: 0,
       submitted: false,
+      startedAt: Date.now(),
       deadline: Date.now() + order.length * MINUTES_PER_QUESTION * 60000,
     };
     save();
@@ -222,6 +228,53 @@
     state.timeUp = !!timeUp;
     save();
     renderResults();
+    recordAttempt();
+  }
+
+  // ---------- saved results ----------
+  async function recordAttempt() {
+    const note = $("saved-note");
+    if (Auth.isGuest()) {
+      note.textContent = "You're not signed in, so this result isn't saved to an account.";
+      note.hidden = false;
+      return;
+    }
+    const sections = {};
+    for (const s of SECTIONS) {
+      const qs = state.order.filter((qi) => QUESTIONS[qi].section === s.id);
+      if (qs.length) sections[s.id] = [qs.filter(isCorrect).length, qs.length];
+    }
+    note.textContent = "Saving your result…";
+    note.hidden = false;
+    const { saved } = await Auth.saveAttempt({
+      score: state.order.filter(isCorrect).length,
+      total: state.order.length,
+      time_up: state.timeUp,
+      duration_seconds: state.startedAt ? Math.round((Date.now() - state.startedAt) / 1000) : null,
+      sections,
+    });
+    note.textContent = saved
+      ? "✓ Saved to your account. You'll see it under Your recent attempts."
+      : "Couldn't save this result to your account. Check your connection; your score above is still correct.";
+  }
+
+  async function renderHistory() {
+    const box = $("history");
+    if (Auth.isGuest()) { box.hidden = true; return; }
+    const rows = await Auth.listAttempts(8);
+    if (!rows.length) { box.hidden = true; return; }
+    const fmtDate = (d) => new Date(d).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+    const fmtTime = (s) => (s == null ? "–" : `${Math.floor(s / 60)} min ${s % 60} s`);
+    $("history-list").innerHTML = `<table class="history-table">
+      <thead><tr><th>Date</th><th>Score</th><th>Result</th><th>Time taken</th></tr></thead>
+      <tbody>${rows.map((r) => {
+        const pct = Math.round((r.score / r.total) * 100);
+        return `<tr><td>${escapeHtml(fmtDate(r.created_at))}</td>
+          <td>${r.score} / ${r.total} (${pct}%)</td>
+          <td><span class="pill ${pct >= PASS_MARK * 100 ? "ok" : "weak"}">${pct >= PASS_MARK * 100 ? "Above 70%" : "Below 70%"}</span>${r.time_up ? ` <span class="pill">time ran out</span>` : ""}</td>
+          <td>${fmtTime(r.duration_seconds)}</td></tr>`;
+      }).join("")}</tbody></table>`;
+    box.hidden = false;
   }
 
   // ---------- results ----------
@@ -316,6 +369,7 @@
   // ---------- wiring ----------
   $("start-btn").onclick = () => start();
   $("home-btn").onclick = () => {
+    if (!$("view-auth").hidden) return;
     if (state && !state.submitted && Object.keys(state.answers).length &&
         !confirm("Leave this exam? Your progress is saved and you can resume it from the start screen.")) return;
     renderStart();
@@ -340,8 +394,19 @@
     else if (k === "f") toggleFlag();
   });
 
-  // Pick up where the user left off if they reload after submitting.
-  const saved = load();
-  if (saved && saved.submitted) { state = saved; renderResults(); }
-  else renderStart();
+  // The login screen comes first. Once someone is signed in, pick up where they
+  // left off if they reload after submitting.
+  Auth.init({
+    onSignedIn() {
+      const saved = load();
+      if (saved && saved.submitted) { state = saved; renderResults(); }
+      else renderStart();
+    },
+    onSignedOut() {
+      stopTimer();
+      $("timer").hidden = true;
+      state = null;
+      showView("auth");
+    },
+  });
 })();
