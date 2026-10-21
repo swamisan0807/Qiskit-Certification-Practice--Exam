@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache">
+  <title>Qiskit 2.x Practice Exam</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap">
+  <link rel="stylesheet" href="styles.css?v=9">
+</head>
+<body>
+  <div class="banner">Qiskit 2.x Certification • Quantum Practice Lab</div>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <button class="brand" id="home-btn" type="button" title="Back to start">
+        <span class="brand-mark" aria-hidden="true">|ψ⟩</span>
+        <span>Qiskit 2.x Practice Exam</span>
+      </button>
+      <div class="topbar-right">
+        <span class="timer" id="timer" hidden></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap" id="app">
+    <!-- Start screen -->
+    <section id="view-start" class="view">
+      <div class="intro">
+        <h1>Practice for the Qiskit v2.x Developer certification</h1>
+        <p class="lead">
+          60 questions across the eight exam sections, weighted the same way as the real
+          C1000-179 exam. Most of them are built around a code snippet, because that's
+          how the real exam tests you. Every snippet was run against Qiskit 2.5.
+        </p>
+      </div>
+
+      <div class="mode-grid">
+        <button class="mode-card" id="start-btn" type="button">
+          <span class="mode-title">Start the timed exam</span>
+          <span class="mode-desc"><span id="start-summary"></span>. Questions and answer choices are shuffled on every attempt. No feedback until you submit, and you can flag questions to come back to. Afterwards you get your score by section, plus every answer explained with an animation.</span>
+        </button>
+      </div>
+
+      <div class="resume" id="resume" hidden>
+        <span id="resume-text"></span>
+        <button class="btn" id="resume-btn" type="button">Resume</button>
+        <button class="btn ghost" id="discard-btn" type="button">Discard</button>
+      </div>
+
+      <p class="fine">
+        Independent study material. These aren't real exam items, and the site isn't affiliated with IBM.
+        Topic outline from the
+        <a href="https://www.ibm.com/training/certification/ibm-certified-quantum-computation-using-qiskit-v2x-developer-associate-C9008400" target="_blank" rel="noopener">official certification page</a>.
+      </p>
+    </section>
+
+    <!-- Quiz screen -->
+    <section id="view-quiz" class="view" hidden>
+      <div class="quiz-layout">
+        <article class="card question-card" id="question-card" aria-live="polite"></article>
+
+        <aside class="sidebar">
+          <div class="card">
+            <div class="progress-head">
+              <span id="progress-label"></span>
+              <span id="progress-score" class="muted"></span>
+            </div>
+            <div class="bar"><span id="progress-bar"></span></div>
+            <div class="qmap" id="qmap"></div>
+            <div class="legend">
+              <span><i class="dot answered"></i>Answered</span>
+              <span><i class="dot flagged"></i>Flagged</span>
+            </div>
+            <button class="btn full" id="submit-btn" type="button">Submit exam</button>
+          </div>
+          <p class="keys muted">Keys: <kbd>1</kbd>–<kbd>4</kbd> answer · <kbd>←</kbd> <kbd>→</kbd> move · <kbd>F</kbd> flag</p>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Results screen -->
+    <section id="view-results" class="view" hidden>
+      <div class="card results-head">
+        <div>
+          <p class="eyebrow" id="result-mode"></p>
+          <h2 id="result-score"></h2>
+          <p id="result-note" class="muted"></p>
+        </div>
+        <div class="results-actions">
+          <button class="btn" id="retry-wrong-btn" type="button">Retake the ones I missed</button>
+          <button class="btn ghost" id="restart-btn" type="button">Start over</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>By section</h3>
+        <div id="section-breakdown"></div>
+      </div>
+
+      <div class="review-head">
+        <h3>Review</h3>
+        <label class="check"><input type="checkbox" id="only-wrong" checked> Only show questions I got wrong</label>
+      </div>
+      <div id="review-list"></div>
+    </section>
+  </main>
+
+  <!-- Bump ?v= when these files change so browsers don't serve stale copies. -->
+  <script src="questions.js?v=9"></script>
+  <script src="anim.js?v=9"></script>
+  <script src="app.js?v=9"></script>
+</body>
+</html>
